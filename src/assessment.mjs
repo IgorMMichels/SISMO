@@ -44,11 +44,21 @@ export function cryptoContext(item) {
 
 const stopWords = new Set('a o os as um uma de da do dos das em na no nas nos e ao aos com por para que se seu sua the an of to in on at and for from with is are new news bitcoin btc crypto cripto market mercado'.split(' '))
 const tokensOf = (item) => new Set(normalized(item.title).replace(/[^\p{L}\p{N}]+/gu, ' ').split(' ').filter((token) => token.length > 2 && !stopWords.has(token)))
+// Tokens e horário são calculados uma vez por notícia: comparar todos os pares fica barato.
+const features = new WeakMap()
+function featuresOf(item) {
+  let value = features.get(item)
+  if (!value) features.set(item, value = { tokens: tokensOf(item), time: Date.parse(item.publishedAt) })
+  return value
+}
 export function similarHeadlines(a, b) {
-  if (Math.abs(Date.parse(a.publishedAt) - Date.parse(b.publishedAt)) > 36 * 3600_000) return false
-  const left = tokensOf(a), right = tokensOf(b)
-  const common = [...left].filter((token) => right.has(token)).length
-  return common >= 4 && common / new Set([...left, ...right]).size >= 0.55
+  const left = featuresOf(a), right = featuresOf(b)
+  if (Math.abs(left.time - right.time) > 36 * 3600_000) return false
+  const [small, large] = left.tokens.size <= right.tokens.size ? [left.tokens, right.tokens] : [right.tokens, left.tokens]
+  if (small.size < 4) return false
+  let common = 0
+  for (const token of small) if (large.has(token)) common += 1
+  return common >= 4 && common / (left.tokens.size + right.tokens.size - common) >= 0.55
 }
 
 export function assessNews(news, now = Date.now()) {
