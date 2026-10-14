@@ -1,0 +1,22 @@
+[Unit]
+Description=Omega Market Bots
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=omega-bots
+Group=omega-bots
+WorkingDirectory=/opt/omega-market-bots
+ExecStart=/usr/bin/node /opt/omega-market-bots/src/server.mjs
+Environment=NODE_ENV=production
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/omega-market-bots/data
+
+[Install]
+WantedBy=multi-user.target

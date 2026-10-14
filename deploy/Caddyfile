@@ -1,0 +1,6 @@
+# Caddy no host da VM. Defina BOTS_DOMAIN no ambiente do serviço Caddy.
+{$BOTS_DOMAIN} {
+  reverse_proxy 127.0.0.1:8787 {
+    flush_interval -1
+  }
+}
